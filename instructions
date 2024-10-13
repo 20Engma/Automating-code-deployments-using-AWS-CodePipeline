@@ -1,0 +1,53 @@
+Setting Up EC2 Instances
+Before deploying the HeartBeat application, ensure that the EC2 instances are correctly tagged and running to be targeted by AWS CodeDeploy.
+
+Tag EC2 Instances: Ensure that the instances are tagged correctly for CodeDeploy to recognize them.
+
+bash
+aws ec2 create-tags --resources i-0abcd1234efgh5678 --tags Key=Name,Value=HeartBeat-Instance
+Check EC2 Instance Status: Verify that the EC2 instance is up and running.
+
+bash
+aws ec2 describe-instances --instance-ids i-0abcd1234efgh5678 --query "Reservations[*].Instances[*].State.Name" --output text
+2. Upload HeartBeat Application to S3
+The HeartBeat application files need to be uploaded to an S3 bucket, which will act as the source for the AWS CodePipeline.
+
+Upload Application Artifacts to S3:
+bash
+aws s3 cp /path/to/heartbeat-app.zip s3://your-s3-bucket-name/heartbeat-app.zip
+3. Creating the AWS CodePipeline
+In this step, you will create and configure your AWS CodePipeline, which will automate the deployment of the HeartBeat application. The pipeline pulls the application from S3 and deploys it to your EC2 instances.
+
+Source Stage: Use the S3 bucket as the source.
+Build Stage (Optional): If any build steps are needed (e.g., code compilation, testing), integrate a build tool like CodeBuild.
+Deploy Stage: Set up AWS CodeDeploy to deploy the application to the EC2 instances.
+4. Deploying the HeartBeat Application Using AWS CodeDeploy
+AWS CodeDeploy will handle the deployment from the S3 bucket to the tagged EC2 instances.
+
+Manual Deployment (Optional): If needed, you can trigger the deployment manually using the AWS CLI:
+bash
+aws deploy create-deployment \
+    --application-name HeartBeatProduction-App \
+    --deployment-group-name HeartBeatDeploymentGroup \
+    --s3-location bucket=your-s3-bucket-name,key=heartbeat-app.zip,bundleType=zip \
+    --deployment-config-name CodeDeployDefault.AllAtOnce
+5. Verifying the HeartBeat Application After Deployment
+Once the deployment is complete, it’s important to check if the HeartBeat service is running on the EC2 instances.
+
+For Windows EC2 Instances: Use PowerShell to check the service status:
+
+powershell
+Get-Service -Name HeartBeatService
+For Linux EC2 Instances: SSH into the instance and check the status of the heartbeat service:
+
+bash
+ssh -i "your-key.pem" ec2-user@your-instance-public-ip
+sudo systemctl status heartbeat
+6. Monitoring the Deployment
+It’s essential to monitor the deployment to ensure it completes successfully and troubleshoot any errors.
+
+Check Deployment Status: Use the AWS CLI to monitor the deployment status:
+
+bash
+aws deploy get-deployment-status --deployment-id d-EXAMPLE1234
+Check Logs for Errors: If there are any issues, check the logs for details on what went wrong during the deployment process.
